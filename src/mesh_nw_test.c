@@ -65,7 +65,7 @@ static const struct bt_mesh_elem elems[] = {
 		BT_MESH_MODEL_NONE),
 };
 
-const struct bt_mesh_comp comp = {
+static const struct bt_mesh_comp comp = {
 	.elem = elems,
 	.elem_count = ARRAY_SIZE(elems),
 };

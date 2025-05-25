@@ -17,12 +17,12 @@ import matplotlib.colors as mcolors
 
 # Topology 2
 # Creating 24 nodes in a 4x6 grid topology
-# nodes = []
-# for i in range(6):
-#     for j in range(4):
-#         nodes.append((i, j))
-# fname = "network2"
-# connectivity_radius = 1.7
+nodes = []
+for i in range(6):
+    for j in range(4):
+        nodes.append((i, j))
+fname = "network2"
+connectivity_radius = 2.9
 
 # Topology 3
 # nodes = [(0, 0), (0, 1), (1, 0), (1, 1), (1.7, 2.5), (2.3, 1.5), (3, 3), (3, 4), (4, 3), (4, 4)]

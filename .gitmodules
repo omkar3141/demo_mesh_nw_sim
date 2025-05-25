@@ -1,0 +1,3 @@
+[submodule "vnd_mdl"]
+	path = vnd_mdl
+	url = https://github.com/NordicPlayground/mesh_demo_vendor_model.git
