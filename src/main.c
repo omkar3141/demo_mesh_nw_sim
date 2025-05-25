@@ -9,9 +9,11 @@
 #include "mesh_test.h"
 
 extern struct bst_test_list *test_network_tst_install(struct bst_test_list *tests);
+extern struct bst_test_list *test_vnd_mdl_install(struct bst_test_list *tests);
 
 bst_test_install_t test_installers[] = {
 	test_network_tst_install,
+	test_vnd_mdl_install,
 	NULL
 };
 

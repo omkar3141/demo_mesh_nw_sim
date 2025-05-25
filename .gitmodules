@@ -1,0 +1,3 @@
+[submodule "vnd_mdl"]
+	path = vnd_mdl
+	url = https://github.com/omkar3141/demo_mesh_vendor_model.git
