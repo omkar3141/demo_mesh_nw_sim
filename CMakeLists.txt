@@ -13,10 +13,15 @@ target_sources(app PRIVATE
   src/main.c
   src/mesh_test.c
   src/mesh_nw_test.c
+  src/mesh_nw_test_vnd_mdl.c
+  vnd_mdl/src/vnd_cli.c
+  vnd_mdl/src/vnd_srv.c
 )
 
 target_include_directories(app PRIVATE
   ${ZEPHYR_NRF_MODULE_DIR}/samples/bluetooth/mesh/common
+  ${ZEPHYR_NRF_MODULE_DIR}/subsys/bluetooth/mesh
+  vnd_mdl/include
 )
 
 zephyr_include_directories(
