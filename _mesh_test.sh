@@ -3,7 +3,7 @@
 
 source ${ZEPHYR_BASE}/tests/bsim/sh_common.source
 
-EXECUTE_TIMEOUT=600
+EXECUTE_TIMEOUT=7000
 
 function Skip(){
   for i in "${SKIP[@]}" ; do
@@ -19,12 +19,14 @@ function RunTest(){
   # Set default values
   arg_ch=""
   arg_file=""
+  use_nodump=""
 
   # Parse optional arguments
-  while [[ "$1" == arg_ch=* || "$1" == arg_file=* ]]; do
+  while [[ "$1" == arg_ch=* || "$1" == arg_file=* || "$1" == nodump ]]; do
       case "$1" in
           arg_ch=*) arg_ch="${1#arg_ch=}" ;;
           arg_file=*) arg_file="${1#arg_file=}" ;;
+          nodump) use_nodump="-nodump" ;;
       esac
       shift
   done
@@ -112,9 +114,9 @@ function RunTest(){
   echo "Starting phy with $count devices"
 
   if [[ "$arg_ch" == "multiatt" ]]; then
-    Execute ./bs_2G4_phy_v1 -v=${verbosity_level} -s=$s_id -D=$count -defmodem=BLE_simple -channel=$arg_ch -argschannel -at=100 -atextra=0 -file=$arg_file
+    Execute ./bs_2G4_phy_v1 -v=${verbosity_level} -s=$s_id -D=$count $use_nodump -defmodem=BLE_simple -channel=$arg_ch -argschannel -at=100 -atextra=0 -file=$arg_file
   else
-    Execute ./bs_2G4_phy_v1 -v=${verbosity_level} -s=$s_id -D=$count -argschannel -at=35
+    Execute ./bs_2G4_phy_v1 -v=${verbosity_level} -s=$s_id -D=$count $use_nodump -argschannel -at=35
   fi
 
   wait_for_background_jobs

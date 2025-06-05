@@ -46,7 +46,7 @@ def create_violinplot(latency_data):
     dev_nums = sorted(latency_data.keys())
     data = [latency_data[dev]['values'] for dev in dev_nums]
 
-    vp = ax.violinplot(data, showmeans=False, showmedians=True)
+    vp = ax.violinplot(data, showmeans=False, showmedians=True, positions=dev_nums)
 
     # Customize violin plot appearance
     for body in vp['bodies']:
@@ -55,20 +55,21 @@ def create_violinplot(latency_data):
 
     # Add mean markers
     means = [np.mean(latency_data[dev]['values']) for dev in dev_nums]
-    ax.plot(range(1, len(dev_nums) + 1), means, 'rs', label='Mean')
+    ax.plot(dev_nums, means, 'rs', label='Mean')
 
     # Annotate mean values
-    for i, mean in enumerate(means):
+    for dev, mean in zip(dev_nums, means):
         ax.annotate(f'{mean:.1f}',
-                   (i + 1, mean),
+                   (dev, mean),
                    textcoords="offset points",
                    xytext=(0, 10),
                    ha='center')
 
-    ax.set_xlabel('Device Index')
+    ax.set_xlabel('Device Number')
     ax.set_ylabel('Latency (milliseconds)')
     ax.set_title('BLE Mesh Network Latency by Device')
     ax.yaxis.grid(True)
+    ax.set_xticks(dev_nums)
     ax.legend()
 
     plt.tight_layout()
