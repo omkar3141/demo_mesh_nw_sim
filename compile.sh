@@ -14,6 +14,8 @@ SCRIPT_PATH="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)/$(
 APP_DIR="$(dirname "$SCRIPT_PATH")"
 APP_DIR="${APP_DIR/${ZEPHYR_BASE}/}"
 
-app=$APP_DIR snippet="bt-ll-sw-split" compile
+echo "Compiling applications in ${APP_DIR}"
+
+app=$APP_DIR snippet="bt-ll-sw-split" cmake_args="-DCONFIG_COVERAGE=n" compile
 
 wait_for_background_jobs
