@@ -71,4 +71,4 @@ fi
 echo "Running test with $NODE_COUNT (devices and tester) nodes."
 echo "Using network coefficient file: $COEFF_FILE_PATH"
 node_array=($(printf "vnd_node_device %.0s" $(seq 2 $NODE_COUNT)) "vnd_node_tester")
-RunTest arg_ch=multiatt arg_file="$COEFF_FILE_PATH" mesh_nw_sim_test "${node_array[@]}"
+RunTest nodump arg_ch=multiatt arg_file="$COEFF_FILE_PATH" mesh_nw_sim_test "${node_array[@]}"

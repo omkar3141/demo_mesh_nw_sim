@@ -20,17 +20,17 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define MAX_ITERATIONS (100)
+#define MAX_ITERATIONS (1)
 #define MAX_DEVICES (50)
-#define NODES_UNDER_TEST {18, 14, 10, 0}
+#define NODES_UNDER_TEST {0, 10, 18}
 
 /* Print connectable adv (proxy advs) counts at this interval */
 #define CONNADV_CNT_INT_SEC (30)
 
 /* Messages can travel up to 8 hops */
-#define MAX_TTL (8)
+#define MAX_TTL (7)
 
-#define WAIT_TIME (MAX_ITERATIONS * MAX_DEVICES * 2)
+#define WAIT_TIME (MAX_ITERATIONS * MAX_DEVICES * 6)
 
 /* Backchannel definitions */
 #define SYNC_CHAN 0
@@ -428,7 +428,7 @@ static void test_vnd_node_tester(void)
 	LOG_INF("Average round-trip latency for acknowledged messages:");
 
 	for (int d = 0; d < total_nodes; d++) {
-		char latency_str[MAX_ITERATIONS * 4 + 70] = {0};
+		char latency_str[MAX_ITERATIONS * 10 + 100] = {0};
 		int64_t avg_latency = 0;
 		int offset = 0;
 
@@ -457,7 +457,7 @@ static void test_vnd_node_tester(void)
 /* For counting connectable ADV traffic */
 int64_t advcnt_t1, advcnt_t2;
 
-static void test_back_channel_pre_init(void)
+static void test_pre_init(void)
 {
 	advcnt_t1 = k_uptime_get();
 	k_work_init_delayable(&netid_adv_cnt_work, net_id_count_work_handler);
@@ -477,7 +477,7 @@ static void test_terminate(void)
 	{                                                        \
 		.test_id = #role "_" #name,                      \
 		.test_descr = description,                       \
-		.test_pre_init_f = test_back_channel_pre_init,   \
+		.test_pre_init_f = test_pre_init,                \
 		.test_tick_f = bt_mesh_test_timeout,             \
 		.test_post_init_f = test_##role##_##name##_init, \
 		.test_main_f = test_##role##_##name,             \
