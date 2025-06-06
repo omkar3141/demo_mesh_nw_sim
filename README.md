@@ -11,7 +11,8 @@ The test suite consists of several key components:
 1. **Source Files**
    - `mesh_test.c`: Utilities and initialization functions
    - `mesh_nw_test.c`: Implementation of device and tester node behaviors
-   - `test_scripts/test_nw_sim.sh`: Test execution script. This script contains various scenarios that you can run the test with
+   - `test_scripts/test_network1.sh`: Test execution script for network topology 1. This script is provided as an example of how to run the test with a specific topology.
+   - `test_scripts/test_1tester_ndevs_generic.sh`: Test execution script. This is a generic script that can be used to run the test with any number of devices and any topology. It takes the number of devices, the attenuation coefficients file, and the number of iterations as arguments.
 
 2. **Network Configuration**
    - Custom topology definitions via node coordinates
@@ -44,10 +45,15 @@ The test suite consists of several key components:
    git clone https://github.com/omkar3141/demo_mesh_nw_sim
    ```
 
-3. Compile and run the test:
+3. Compile and run the test. For example: To run the test with 10 devices, 20 message Get/Status transactions per device, and using the topology 1:
    ```bash
    cd /ncs/zephyr/demo_mesh_nw_sim
    ./compile.sh
+   ./test_scripts/test_1tester_ndevs_generic.sh -n 10 -c network1_att_file.coeff -i 20
+   ```
+
+   Alternatively, you can also use `test_network1.sh` script to run the test with 10 devices and default number of iterations for topology 1:
+   ```bash
    ./test_scripts/test_network1.sh
    ```
 
@@ -55,22 +61,20 @@ The test suite consists of several key components:
 
 Output will look like this:
 ```bash
-d_09: @00:02:04.858796  [00:02:04.858,795] <inf> mesh_nw_test: Tester (0x000a) and each of the devices exchanged 10 messages
-d_09: @00:02:04.858796  [00:02:04.858,795] <inf> mesh_nw_test: Average round-trip latency for acknowledged messages:
-d_09: @00:02:04.858796  [00:02:04.858,795] <inf> mesh_nw_test: Dev 0 addr 0x0001 avg latency:  83 ms failures 0 # values: 59 105 63 80 133 86 83 60 84 77
-d_09: @00:02:04.858796  [00:02:04.858,795] <inf> mesh_nw_test: Dev 1 addr 0x0002 avg latency:  83 ms failures 0 # values: 79 72 75 99 81 96 96 97 77 60
-d_09: @00:02:04.858796  [00:02:04.858,795] <inf> mesh_nw_test: Dev 2 addr 0x0003 avg latency:  81 ms failures 0 # values: 91 97 91 69 68 70 72 68 71 121
-d_09: @00:02:04.858796  [00:02:04.858,795] <inf> mesh_nw_test: Dev 3 addr 0x0004 avg latency:  68 ms failures 0 # values: 36 90 37 94 93 66 35 86 88 61
-d_09: @00:02:04.858796  [00:02:04.858,795] <inf> mesh_nw_test: Dev 4 addr 0x0005 avg latency:  53 ms failures 0 # values: 31 55 78 51 58 30 56 31 65 77
-d_09: @00:02:04.858796  [00:02:04.858,795] <inf> mesh_nw_test: Dev 5 addr 0x0006 avg latency:  44 ms failures 0 # values: 25 49 53 44 25 23 76 45 52 52
-d_09: @00:02:04.858796  [00:02:04.858,795] <inf> mesh_nw_test: Dev 6 addr 0x0007 avg latency:  32 ms failures 0 # values: 43 39 17 18 42 19 18 18 65 47
-d_09: @00:02:04.858796  [00:02:04.858,795] <inf> mesh_nw_test: Dev 7 addr 0x0008 avg latency:  24 ms failures 0 # values: 33 12 12 13 12 35 41 62 12 13
-d_09: @00:02:04.858796  [00:02:04.858,795] <inf> mesh_nw_test: Dev 8 addr 0x0009 avg latency:   6 ms failures 0 # values: 6 6 6 5 7 6 6 6 6 6
-d_09: @00:02:04.858796  [00:02:04.858,795] <inf> mesh_nw_test: Dev 9 addr 0x000a avg latency:   0 ms failures 0 # values: 0 0 0 0 0 0 0 0 0 0
+d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 0 addr 0x0001 avg latency:  78 ms failures 0 # values: 59 105 63 80 133 86 83 60 84 77 65 63 76 79 87 83 76 78 54 82
+d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 1 addr 0x0002 avg latency:  85 ms failures 0 # values: 81 47 72 70 77 71 92 73 75 98 75 76 78 78 127 100 124 77 79 147
+d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 2 addr 0x0003 avg latency:  70 ms failures 0 # values: 63 41 63 45 74 73 46 96 91 70 88 97 45 67 97 98 97 43 66 43
+d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 3 addr 0x0004 avg latency:  67 ms failures 0 # values: 88 89 65 58 39 89 40 36 92 66 36 56 64 38 37 95 95 36 169 61
+d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 4 addr 0x0005 avg latency:  58 ms failures 0 # values: 58 29 31 51 63 53 87 61 51 78 55 76 74 31 82 30 90 109 30 31
+d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 5 addr 0x0006 avg latency:  42 ms failures 0 # values: 50 74 44 25 23 24 70 46 25 51 51 23 52 24 24 67 53 24 47 53
+d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 6 addr 0x0007 avg latency:  37 ms failures 0 # values: 19 41 18 45 42 46 63 46 18 19 72 18 49 18 40 18 76 41 43 18
+d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 7 addr 0x0008 avg latency:  20 ms failures 0 # values: 13 12 37 12 39 12 11 35 32 12 12 12 34 12 36 13 13 12 38 12
+d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 8 addr 0x0009 avg latency:   6 ms failures 0 # values: 5 7 6 6 5 6 7 6 6 6 6 6 6 6 6 5 6 6 6 7
+d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 9 addr 0x000a avg latency:   0 ms failures 0 # values: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 d_09: @00:02:04.858796 INFO: test_node_tester PASSED
 ```
 
-5. You can then visualize the test results by pasting the output to helper script `helper_plot_results.py` and running it:
+5. You can then visualize the test results by pasting the output in the helper script `helper_plot_results.py` and running it:
    ```bash
    python3 helper_plot_results.py
    ```
@@ -132,9 +136,9 @@ Use the `helper_nw_att_file_creator.py` script to create new network topologies.
 
    If you plot the results using `helper_plot_results.py`, the output violin plot will show the average round-trip latency for each device in the network. The x-axis will represent the device addresses, and the y-axis will represent the average latency in milliseconds. The plot will show the distribution of latencies for each device, allowing you to visualize the performance of the mesh network under the defined topology.
 
-   The plot will look like this:
+   The violin plot for this topology, with 20 messages exchanged for each node, looks like this:
 
-   <img src="mesh_latency_violinplot.png" alt="Network1 Latency Plot" width="500"/>
+   <img src="network1_violinplot.png" alt="Network1 Latency Plot" width="500"/>
 
 2. Example 2
    ```python
@@ -150,6 +154,10 @@ Use the `helper_nw_att_file_creator.py` script to create new network topologies.
 
    <img src="network2.png" alt="Network2 Topology" width="500"/>
 
+   The violin plot for this topology, with 20 messages exchanged for each node, looks like this:
+
+   <img src="network2_violinplot.png" alt="Network2 Latency Plot" width="500"/>
+
 3. Example 3
    ```python
    nodes = [(0, 0), (0, 1), (1, 0), (1, 1), (1.7, 2.5), (2.3, 1.5), (3, 3), (3, 4), (4, 3), (4, 4)]
@@ -162,12 +170,14 @@ Use the `helper_nw_att_file_creator.py` script to create new network topologies.
 
    <img src="network3.png" alt="Network3 Topology" width="500"/>
 
+   The violin plot for this topology, with 20 messages exchanged for each node, looks like this:
+
+   <img src="network3_violinplot.png" alt="Network3 Latency Plot" width="500"/>
+
 
 ## Further exploration
 
-You can build your own testing scenarios for specific applications and specific use-cases with this
-approch. It is recommended to test one specific thing at a time to keep test code simpler. However,
-you can construct as complex test as you want.
+You can build your own testing scenarios for specific applications and specific use-cases with this approch. It is recommended to test one specific thing at a time to keep test code simpler. However, you can construct as complex test as you want.
 
 Refer to existing [Bluetooth Mesh Babblesim tests](https://github.com/zephyrproject-rtos/zephyr/tree/main/tests/bsim/bluetooth/mesh) for more inspiration. The existing tests are not
 based on network topology, and they assume all devices can communicate with all other devices.

@@ -8,6 +8,7 @@ SCRIPT_PATH="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)/$(
 NW_CONFIG_DIR="$(dirname "$SCRIPT_PATH")/../"
 NODE_COUNT=""
 COEFF_FILE=""
+MAX_ITERATIONS="10"  # Default value for iterations
 
 # Usage information
 function show_usage() {
@@ -18,6 +19,7 @@ function show_usage() {
   echo "                       (e.g., for 10 nodes, specify -n 10, which includes 9 device nodes and 1 tester node)"
   echo "  -c, --coeff FILE      Network coefficient file"
   echo "Other Options:"
+  echo "  -i, --iterations NUM  Number of iterations for the test (default: 10)"
   echo "  -h, --help            Show this help message"
   exit 1
 }
@@ -31,6 +33,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -c|--coeff)
       COEFF_FILE="$2"
+      shift 2
+      ;;
+    -i|--iterations)
+      MAX_ITERATIONS="$2"
       shift 2
       ;;
     -h|--help)
@@ -64,6 +70,12 @@ if [[ ! -f "$COEFF_FILE_PATH" ]]; then
   exit 1
 fi
 
+# Validate MAX_ITERATIONS
+if [[ -n "$MAX_ITERATIONS" && ! "$MAX_ITERATIONS" =~ ^[0-9]+$ ]]; then
+  echo "Error: Iterations must be a positive integer. Got: '$MAX_ITERATIONS'"
+  exit 1
+fi
+
 # Note: In all test scenarios, tester node must be kept at the end so that tester
 # knows the number of devices in the network.
 
@@ -71,4 +83,4 @@ fi
 echo "Running test with $NODE_COUNT (devices and tester) nodes."
 echo "Using network coefficient file: $COEFF_FILE_PATH"
 node_array=($(printf "node_device %.0s" $(seq 2 $NODE_COUNT)) "node_tester")
-RunTest arg_ch=multiatt arg_file="$COEFF_FILE_PATH" mesh_nw_sim_test "${node_array[@]}"
+RunTest arg_ch=multiatt arg_file="$COEFF_FILE_PATH" mesh_nw_sim_test "${node_array[@]}" -- -argstest iterations="$MAX_ITERATIONS"

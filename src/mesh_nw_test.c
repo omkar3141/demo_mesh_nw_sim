@@ -14,13 +14,19 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define MAX_ITERATIONS (10)
-#define MAX_DEVICES (100)
+/* This must not be reduced, as these macros are used to initialize max buffers for holding
+ * test results.
+ */
+#define MAX_ITERATIONS  (100)
+#define MAX_DEVICES 	(100)
 
 /* Messages can travel up to 9 hops */
-#define MAX_TTL (9)
+#define MAX_TTL 	(9)
 
-#define WAIT_TIME (MAX_ITERATIONS * MAX_DEVICES * 2)
+#define DEF_ITERATIONS 	(10)
+static int max_iterations = DEF_ITERATIONS;
+
+#define WAIT_TIME (max_iterations * MAX_DEVICES * 2)
 
 extern enum bst_result_t bst_result;
 
@@ -146,6 +152,28 @@ static void test_node_device(void)
 	PASS();
 }
 
+/* Parse command line arguments */
+static void test_args_parse(int argc, char *argv[])
+{
+	bs_args_struct_t args_struct[] = {
+		{
+			.dest = &max_iterations,
+			.type = 'i',
+			.name = "{integer}",
+			.option = "iterations",
+			.descript = "Number of iterations to run for each test"
+		},
+		ARG_TABLE_ENDMARKER
+	};
+
+	bs_args_parse_all_cmd_line(argc, argv, args_struct);
+
+	if (max_iterations < 1 || max_iterations > MAX_ITERATIONS) {
+		FAIL("Invalid number of given iterations %d. Max allowed %d", max_iterations,
+		     MAX_ITERATIONS);
+	}
+}
+
 static void test_node_tester_init(void)
 {
 	bt_mesh_test_cfg_set(WAIT_TIME);
@@ -176,12 +204,14 @@ static void test_node_tester(void)
 	int64_t latency[MAX_DEVICES][MAX_ITERATIONS] = {0};
 	int failures[MAX_DEVICES] = {0};
 
+	LOG_INF("Using MAX_ITERATIONS: %d", max_iterations);
+
 	for(int dut = 0; dut < total_nodes; dut++)
 	{
 		int addr = dut + 1;
 		LOG_INF("Testing latency for Device Addr: 0x%04x", addr);
 
-		for (int i = 0; i < MAX_ITERATIONS; i++) {
+		for (int i = 0; i < max_iterations; i++) {
 
 			struct bt_mesh_msg_ctx ctx = {0};
 			uint8_t attention;
@@ -213,7 +243,7 @@ static void test_node_tester(void)
 
 	/* Print average latency */
 	LOG_INF("Tester (0x%04x) and each of the devices exchanged %d messages", total_nodes,
-		MAX_ITERATIONS);
+		max_iterations);
 	LOG_INF("Average round-trip latency for acknowledged messages:");
 
 	for (int d = 0; d < total_nodes; d++) {
@@ -221,16 +251,17 @@ static void test_node_tester(void)
 		char latency_str[MAX_ITERATIONS * 4 + 50] = {0};
 		int offset = 0;
 
-		for (int i = 0; i < MAX_ITERATIONS; i++) {
+		for (int i = 0; i < max_iterations; i++) {
 			avg_latency += latency[d][i];
 		}
 
-		avg_latency = avg_latency / MAX_ITERATIONS;
+		avg_latency = avg_latency / max_iterations;
 
-		offset = sprintf(latency_str, "Dev %d addr 0x%04x avg latency: %3lld ms failures %d # values: ",
+		offset = sprintf(latency_str,
+			"Dev %d addr 0x%04x avg latency: %3lld ms failures %d # values: ",
 			d, d + 1, avg_latency, failures[d]);
 
-		for (int i = 0; i < MAX_ITERATIONS; i++) {
+		for (int i = 0; i < max_iterations; i++) {
 			offset += sprintf(latency_str + offset, "%lld ", latency[d][i]);
 		}
 
@@ -247,6 +278,7 @@ static void test_node_tester(void)
 		.test_id = #role "_" #name,                      \
 		.test_descr = description,                       \
 		.test_tick_f = bt_mesh_test_timeout,             \
+		.test_args_f = test_args_parse,                  \
 		.test_post_init_f = test_##role##_##name##_init, \
 		.test_main_f = test_##role##_##name,             \
 	}
