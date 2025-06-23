@@ -12,7 +12,6 @@
 #include "bs_utils.h"
 #include "bsim_args_runner.h"
 #include "argparse.h"
-#include <bs_pc_backchannel.h>
 #include <vnd_cli.h>
 #include <vnd_srv.h>
 
@@ -20,21 +19,20 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define MAX_ITERATIONS (100)
-#define MAX_DEVICES (50)
-#define NODES_UNDER_TEST {18, 14, 10, 0}
+#define MAX_ITERATIONS  (100)
+#define MAX_DEVICES 	(100)
+// #define NODES_UNDER_TEST {0, 19}
 
 /* Print connectable adv (proxy advs) counts at this interval */
-#define CONNADV_CNT_INT_SEC (30)
+#define CONNADV_CNT_INT_SEC (600)
 
-/* Messages can travel up to 8 hops */
-#define MAX_TTL (8)
+/* Messages can travel up to 9 hops */
+#define MAX_TTL (9)
 
-#define WAIT_TIME (MAX_ITERATIONS * MAX_DEVICES * 2)
+#define DEF_ITERATIONS 	(10)
+static int max_iterations = DEF_ITERATIONS;
 
-/* Backchannel definitions */
-#define SYNC_CHAN 0
-#define SYNC_MSG_SIZE 1
+#define WAIT_TIME (max_iterations * MAX_DEVICES * 6)
 
 extern enum bst_result_t bst_result;
 
@@ -169,7 +167,7 @@ static void handle_vendor_status(struct bt_mesh_vendor_cli *cli,
 		data[len] = '\0'; /* Null-terminate the string */
 	}
 
-	LOG_INF("Received STATUS: len %d ttl %d", len, ctx->recv_ttl);
+	LOG_DBG("Received STATUS: len %d ttl %d", len, ctx->recv_ttl);
 }
 
 
@@ -369,7 +367,7 @@ static void test_vnd_node_tester(void)
 #else
 	/* If NODES_UNDER_TEST is not defined, use all nodes in the network except tester */
 	int nodes_under_test[MAX_DEVICES];
-	for (int i = 0; i < total_nodes - 1; i++) {
+	for (int i = 0; i < total_nodes; i++) {
 		nodes_under_test[i] = i;
 	}
 #endif
@@ -392,7 +390,7 @@ static void test_vnd_node_tester(void)
 		LOG_INF("Testing latency for Dev: 0x%04x (ID: %d) Tester: 0x%04x", dut_addr,
 			 dut_id, tester_addr);
 
-		for (int i = 0; i < MAX_ITERATIONS; i++) {
+		for (int i = 0; i < max_iterations; i++) {
 
 			ctx.net_idx = net_idx;
 			ctx.app_idx = app_idx;
@@ -416,7 +414,7 @@ static void test_vnd_node_tester(void)
 
 			LOG_INF("Latency: %d", tst_res[d].latency[i]);
 
-			k_sleep(K_MSEC(2000));
+			k_sleep(K_MSEC(1500));
 		}
 
 		LOG_INF("Network ID advertisements count %d", net_id_counts);
@@ -424,24 +422,24 @@ static void test_vnd_node_tester(void)
 
 	/* Print average latency */
 	LOG_INF("Tester (0x%04x) and each of the devices exchanged %d messages", total_nodes,
-		MAX_ITERATIONS);
+		max_iterations);
 	LOG_INF("Average round-trip latency for acknowledged messages:");
 
 	for (int d = 0; d < total_nodes; d++) {
-		char latency_str[MAX_ITERATIONS * 4 + 70] = {0};
+		char latency_str[MAX_ITERATIONS * 10 + 100] = {0};
 		int64_t avg_latency = 0;
 		int offset = 0;
 
-		for (int i = 0; i < MAX_ITERATIONS; i++) {
+		for (int i = 0; i < max_iterations; i++) {
 			avg_latency += tst_res[d].latency[i];
 		}
 
-		avg_latency = avg_latency / MAX_ITERATIONS;
+		avg_latency = avg_latency / max_iterations;
 
 		offset = sprintf(latency_str, "Dev %d addr 0x%04x avg latency: %3lld ms failures %d # values: ",
 			tst_res[d].d_id, tst_res[d].addr, avg_latency, tst_res[d].failures);
 
-		for (int i = 0; i < MAX_ITERATIONS; i++) {
+		for (int i = 0; i < max_iterations; i++) {
 			offset += sprintf(latency_str + offset, "%lld ", tst_res[d].latency[i]);
 		}
 
@@ -457,7 +455,7 @@ static void test_vnd_node_tester(void)
 /* For counting connectable ADV traffic */
 int64_t advcnt_t1, advcnt_t2;
 
-static void test_back_channel_pre_init(void)
+static void test_pre_init(void)
 {
 	advcnt_t1 = k_uptime_get();
 	k_work_init_delayable(&netid_adv_cnt_work, net_id_count_work_handler);
@@ -472,21 +470,43 @@ static void test_terminate(void)
 		net_id_counts, (net_id_counts / ((advcnt_t2 - advcnt_t1)/1000)));
 }
 
+/* Parse command line arguments */
+static void test_args_parse(int argc, char *argv[])
+{
+	bs_args_struct_t args_struct[] = {
+		{
+			.dest = &max_iterations,
+			.type = 'i',
+			.name = "{integer}",
+			.option = "iterations",
+			.descript = "Number of iterations to run for each test"
+		},
+		ARG_TABLE_ENDMARKER
+	};
+
+	bs_args_parse_all_cmd_line(argc, argv, args_struct);
+
+	if (max_iterations < 1 || max_iterations > MAX_ITERATIONS) {
+		FAIL("Invalid number of given iterations %d. Max allowed %d", max_iterations,
+		     MAX_ITERATIONS);
+	}
+}
 
 #define TEST_CASE(role, name, description)                       \
 	{                                                        \
 		.test_id = #role "_" #name,                      \
 		.test_descr = description,                       \
-		.test_pre_init_f = test_back_channel_pre_init,   \
+		.test_pre_init_f = test_pre_init,                \
 		.test_tick_f = bt_mesh_test_timeout,             \
+		.test_args_f = test_args_parse,                  \
 		.test_post_init_f = test_##role##_##name##_init, \
 		.test_main_f = test_##role##_##name,             \
 		.test_delete_f = test_terminate,                 \
 	}
 
 static const struct bst_test_instance test_network[] = {
-	TEST_CASE(vnd_node, device, "Nodes in the network"),
-	TEST_CASE(vnd_node, tester, "tester device"),
+	TEST_CASE(vnd_node, device, "Vendor model nodes in the network"),
+	TEST_CASE(vnd_node, tester, "Vendor model tester device"),
 	BSTEST_END_MARKER
 };
 
