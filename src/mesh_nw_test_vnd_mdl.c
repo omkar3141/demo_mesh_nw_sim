@@ -19,36 +19,22 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define MAX_ITERATIONS  (100)
-#define MAX_DEVICES 	(100)
-// #define NODES_UNDER_TEST {0, 19}
-
-/* Print connectable adv (proxy advs) counts at this interval */
-#define CONNADV_CNT_INT_SEC (600)
-
-/* Messages can travel up to 9 hops */
-#define MAX_TTL (9)
-
-#define DEF_ITERATIONS 	(10)
-static int max_iterations = DEF_ITERATIONS;
+extern int max_iterations;
+extern int dut_list[MAX_DEVICES];
+extern int dut_count;
+extern int net_id_counts;
 
 #define WAIT_TIME (max_iterations * MAX_DEVICES * 6)
 
 extern enum bst_result_t bst_result;
 
-struct test_results {
-	uint16_t d_id;
-	uint16_t addr;
-	uint16_t failures;
-	int64_t latency[MAX_ITERATIONS];
-	uint8_t ttl[MAX_ITERATIONS];
-} tst_res[MAX_DEVICES];
+extern uint8_t dev_key[16];
+extern uint8_t app_key[16];
+extern uint8_t app_idx;
+extern uint8_t net_key[16];
+extern uint8_t net_idx;
 
-static uint8_t dev_key[16] = { 0xdd };
-static uint8_t app_key[16] = { 0xaa };
-static uint8_t app_idx = 0;
-static uint8_t net_key[16] = { 0xcc };
-static uint8_t net_idx = 0;
+extern struct test_results tst_res[MAX_DEVICES];
 
 static struct bt_mesh_prov prov;
 static struct bt_mesh_cfg_cli cfg_cli;
@@ -56,8 +42,6 @@ static struct bt_mesh_health_srv health_srv;
 static struct bt_mesh_model_pub health_pub = {
 	.msg = NET_BUF_SIMPLE(BT_MESH_TX_SDU_MAX),
 };
-
-static int net_id_counts;
 
 /* Sample message buffer */
 static const char set_msg[] =
@@ -218,37 +202,12 @@ static const struct bt_mesh_comp comp = {
 	.elem_count = ARRAY_SIZE(elems),
 };
 
-static void provision(uint16_t addr)
-{
-	int err;
-
-	/* Each device's device key is dddd...<addr> */
-	dev_key[0] = addr & 0xFF;
-	dev_key[1] = addr >> 8;
-
-	err = bt_mesh_provision(net_key, net_idx, 0, 0, addr, dev_key);
-	if (err) {
-		FAIL("Provisioning failed (err %d)", err);
-		return;
-	}
-
-	LOG_INF("Device provisioned. Addr: 0x%04x", addr);
-}
-
-static void common_configure(uint16_t addr)
+static void additional_configure(uint16_t addr)
 {
 	uint8_t status;
 	int err;
 
-	/* Add App Key */
-	err = bt_mesh_cfg_cli_app_key_add(net_idx, addr, net_idx, app_idx, app_key,
-					  &status);
-	if (err || status) {
-		FAIL("AppKey add failed (err %d, status %u)", err, status);
-		return;
-	}
-
-	/* Bind it to Health Server and Client */
+	/* Bind AppKey to Vendor Server and Client */
 	err = bt_mesh_cfg_cli_mod_app_bind_vnd(net_idx, addr, addr, app_idx,
 					   BT_MESH_MODEL_ID_VENDOR_SRV, BT_COMP_ID_VENDOR, &status);
 	if (err || status) {
@@ -264,57 +223,14 @@ static void common_configure(uint16_t addr)
 		     status);
 		return;
 	}
-
-	/* Change default TTL to suit the maximum network size*/
-	uint8_t ttl_status;
-	err = bt_mesh_cfg_cli_ttl_set(net_idx, addr, MAX_TTL, &ttl_status);
-	if (err) {
-		FAIL("Default TTL set failed (err %d, status %u)", err, status);
-		return;
-	}
-
-	ASSERT_TRUE_MSG(ttl_status == MAX_TTL, "TTL status %u != %u", ttl_status, MAX_TTL);
-
-	bt_mesh_proxy_identity_enable();
 }
-
-/* Scanner callback function */
-static void scan_packet_recv(const struct bt_le_scan_recv_info *info, struct net_buf_simple *buf)
-{
-    if (info->adv_type == BT_GAP_ADV_TYPE_ADV_IND) {
-        /* FIXME: Parse advertisement data and find out Mesh Proxy Service */
-
-	// since this is simulation
-        net_id_counts++;
-    }
-}
-
-/* Register the scanner callback during initialization */
-static struct bt_le_scan_cb scan_cb = {
-	.recv = scan_packet_recv,
-};
 
 static void dev_prov_and_conf(uint16_t addr)
 {
 	/* Do self provisioning and configuration to keep test bench simple. */
-	provision(addr);
-	common_configure(addr);
-
-	bt_le_scan_cb_register(&scan_cb);
-}
-
-/* Track Proxy advertisement counts */
-static struct k_work_delayable netid_adv_cnt_work;
-
-static void net_id_count_work_handler(struct k_work *work)
-{
-	ARG_UNUSED(work);
-
-	static int prev = 0;
-
-	LOG_INF("Proxy adv count: %d / sec", (net_id_counts - prev) / CONNADV_CNT_INT_SEC);
-	prev = net_id_counts;
-	k_work_schedule(&netid_adv_cnt_work, K_SECONDS(CONNADV_CNT_INT_SEC));
+	bt_mesh_tst_provision(addr);
+	bt_mesh_tst_common_configure(addr);
+	additional_configure(addr);
 }
 
 static void test_vnd_node_device_init(void)
@@ -360,35 +276,35 @@ static void test_vnd_node_tester(void)
 	 */
 	dev_prov_and_conf(tester_addr);
 
-	/* Prepare nodes under test array if NODES_UNDER_TEST is defined, else use all nodes */
-#if defined(NODES_UNDER_TEST)
-	int nodes_under_test[] = NODES_UNDER_TEST;
-	total_nodes = sizeof(nodes_under_test) / sizeof(nodes_under_test[0]);
-#else
-	/* If NODES_UNDER_TEST is not defined, use all nodes in the network except tester */
-	int nodes_under_test[MAX_DEVICES];
-	for (int i = 0; i < total_nodes; i++) {
-		nodes_under_test[i] = i;
-	}
-#endif
+	LOG_INF("Using MAX_ITERATIONS: %d", max_iterations);
 
-	LOG_INF("Number of nodes under test: %d", total_nodes);
+	/* Print DUT list if specified */
+	if (dut_count > 0) {
+		LOG_INF("Testing specific DUTs:");
+		for (int i = 0; i < dut_count; i++) {
+			LOG_INF("  DUT %d: Device Addr 0x%04x", dut_list[i], dut_list[i] + 1);
+		}
+	}
 
 	/* For each node, send attention get 10 times and store latency information */
 	struct bt_mesh_vendor_status rsp = {0};
 	struct bt_mesh_msg_ctx ctx = {0};
 
-	for(int d = 0; d < total_nodes; d++)
+	for(int dut = 0; dut < total_nodes; dut++)
 	{
-		int dut_addr = nodes_under_test[d] + 1;
-		int dut_id = nodes_under_test[d];
+		/* Skip if not in DUT list */
+		if (!is_dut(dut, dut_list, dut_count)) {
+			continue;
+		}
 
-		tst_res[d].d_id = dut_id;
-		tst_res[d].addr = dut_addr;
-		tst_res[d].failures = 0;
+		int dut_addr = dut + 1;
+
+		tst_res[dut].d_id = dut;
+		tst_res[dut].addr = dut_addr;
+		tst_res[dut].failures = 0;
 
 		LOG_INF("Testing latency for Dev: 0x%04x (ID: %d) Tester: 0x%04x", dut_addr,
-			 dut_id, tester_addr);
+			 dut, tester_addr);
 
 		for (int i = 0; i < max_iterations; i++) {
 
@@ -404,15 +320,15 @@ static void test_vnd_node_tester(void)
 
 			if (err) {
 				LOG_ERR("Vendor Set failed (err %d)", err);
-				tst_res[d].failures++;
+				tst_res[dut].failures++;
 				k_sleep(K_MSEC(200));
 				continue;
 			}
 
 			t2 = k_uptime_get();
-			tst_res[d].latency[i] = t2 - t1;
+			tst_res[dut].latency[i] = t2 - t1;
 
-			LOG_INF("Latency: %d", tst_res[d].latency[i]);
+			LOG_INF("Latency: %d", tst_res[dut].latency[i]);
 
 			k_sleep(K_MSEC(1500));
 		}
@@ -420,59 +336,28 @@ static void test_vnd_node_tester(void)
 		LOG_INF("Network ID advertisements count %d", net_id_counts);
 	}
 
-	/* Print average latency */
-	LOG_INF("Tester (0x%04x) and each of the devices exchanged %d messages", total_nodes,
-		max_iterations);
-	LOG_INF("Average round-trip latency for acknowledged messages:");
-
-	for (int d = 0; d < total_nodes; d++) {
-		char latency_str[MAX_ITERATIONS * 10 + 100] = {0};
-		int64_t avg_latency = 0;
-		int offset = 0;
-
-		for (int i = 0; i < max_iterations; i++) {
-			avg_latency += tst_res[d].latency[i];
-		}
-
-		avg_latency = avg_latency / max_iterations;
-
-		offset = sprintf(latency_str, "Dev %d addr 0x%04x avg latency: %3lld ms failures %d # values: ",
-			tst_res[d].d_id, tst_res[d].addr, avg_latency, tst_res[d].failures);
-
-		for (int i = 0; i < max_iterations; i++) {
-			offset += sprintf(latency_str + offset, "%lld ", tst_res[d].latency[i]);
-		}
-
-		LOG_INF("%s", latency_str);
-	}
-
+	print_common_results(total_nodes, max_iterations);
 
 	PASS();
 
 	bs_trace_silent_exit(0);
 }
 
-/* For counting connectable ADV traffic */
-int64_t advcnt_t1, advcnt_t2;
-
 static void test_pre_init(void)
 {
-	advcnt_t1 = k_uptime_get();
-	k_work_init_delayable(&netid_adv_cnt_work, net_id_count_work_handler);
-	k_work_schedule(&netid_adv_cnt_work, K_SECONDS(CONNADV_CNT_INT_SEC));
+	bt_mesh_tst_conn_adv_cnt_init();
 }
 
 static void test_terminate(void)
 {
-	advcnt_t2 = k_uptime_get();
-	k_work_cancel_delayable(&netid_adv_cnt_work);
-	LOG_INF("Total connetable ADVs observed: %d (%d / seconds)",
-		net_id_counts, (net_id_counts / ((advcnt_t2 - advcnt_t1)/1000)));
+	bt_mesh_tst_conn_adv_cnt_finish();
 }
 
 /* Parse command line arguments */
 static void test_args_parse(int argc, char *argv[])
 {
+	static char *duts_str;
+
 	bs_args_struct_t args_struct[] = {
 		{
 			.dest = &max_iterations,
@@ -480,6 +365,13 @@ static void test_args_parse(int argc, char *argv[])
 			.name = "{integer}",
 			.option = "iterations",
 			.descript = "Number of iterations to run for each test"
+		},
+		{
+			.dest = &duts_str,
+			.type = 's',
+			.name = "{string}",
+			.option = "duts",
+			.descript = "Comma-separated list of DUT indices to test"
 		},
 		ARG_TABLE_ENDMARKER
 	};
@@ -490,6 +382,9 @@ static void test_args_parse(int argc, char *argv[])
 		FAIL("Invalid number of given iterations %d. Max allowed %d", max_iterations,
 		     MAX_ITERATIONS);
 	}
+
+	dut_count = ARRAY_SIZE(dut_list);
+	parse_dut_list(duts_str, dut_list, &dut_count);
 }
 
 #define TEST_CASE(role, name, description)                       \
