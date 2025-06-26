@@ -11,8 +11,10 @@ The test suite consists of several key components:
 1. **Source Files**
    - `mesh_test.c`: Utilities and initialization functions
    - `mesh_nw_test.c`: Implementation of device and tester node behaviors
+   - `mesh_nw_test_vnd_mdl.c`: Testing using vendor models
    - `test_scripts/test_network1.sh`: Test execution script for network topology 1. This script is provided as an example of how to run the test with a specific topology.
    - `test_scripts/test_1tester_ndevs_generic.sh`: Test execution script. This is a generic script that can be used to run the test with any number of devices and any topology. It takes the number of devices, the attenuation coefficients file, and the number of iterations as arguments.
+   - `test_scripts/test_1_tester_n_dev_generic_vnd_mdl.sh`: Test execution script for testing using vendor models.
 
 2. **Network Configuration**
    - Custom topology definitions via node coordinates
@@ -146,7 +148,7 @@ Use the `helper_nw_att_file_creator.py` script to create new network topologies.
        for j in range(4):
            nodes.append((i, j))
    fname = "network2"
-   connectivity_radius = 1.7
+   connectivity_radius = 2.9
    ```
 
    Results in following topology:
