@@ -16,6 +16,6 @@ APP_DIR="${APP_DIR/${ZEPHYR_BASE}/}"
 
 echo "Compiling applications in ${APP_DIR}"
 
-app=$APP_DIR snippet="bt-ll-sw-split" cmake_args="-DCONFIG_COVERAGE=n" compile
+app=$APP_DIR cmake_args="-DCONFIG_COVERAGE=n" compile
 
 wait_for_background_jobs

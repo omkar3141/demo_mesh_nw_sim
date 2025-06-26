@@ -32,10 +32,10 @@ The test suite consists of several key components:
 
 ## Building and Running the Test
 
-1. Check out v3.0.1 tag for nRF Connect SDK:
+1. Check out main branch for nRF Connect SDK:
    ```bash
    cd /ncs/nrf
-   git checkout v3.0.1
+   git checkout main
    west update
    ```
 
@@ -61,17 +61,16 @@ The test suite consists of several key components:
 
 Output will look like this:
 ```bash
-d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 0 addr 0x0001 avg latency:  78 ms failures 0 # values: 59 105 63 80 133 86 83 60 84 77 65 63 76 79 87 83 76 78 54 82
-d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 1 addr 0x0002 avg latency:  85 ms failures 0 # values: 81 47 72 70 77 71 92 73 75 98 75 76 78 78 127 100 124 77 79 147
-d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 2 addr 0x0003 avg latency:  70 ms failures 0 # values: 63 41 63 45 74 73 46 96 91 70 88 97 45 67 97 98 97 43 66 43
-d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 3 addr 0x0004 avg latency:  67 ms failures 0 # values: 88 89 65 58 39 89 40 36 92 66 36 56 64 38 37 95 95 36 169 61
-d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 4 addr 0x0005 avg latency:  58 ms failures 0 # values: 58 29 31 51 63 53 87 61 51 78 55 76 74 31 82 30 90 109 30 31
-d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 5 addr 0x0006 avg latency:  42 ms failures 0 # values: 50 74 44 25 23 24 70 46 25 51 51 23 52 24 24 67 53 24 47 53
-d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 6 addr 0x0007 avg latency:  37 ms failures 0 # values: 19 41 18 45 42 46 63 46 18 19 72 18 49 18 40 18 76 41 43 18
-d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 7 addr 0x0008 avg latency:  20 ms failures 0 # values: 13 12 37 12 39 12 11 35 32 12 12 12 34 12 36 13 13 12 38 12
-d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 8 addr 0x0009 avg latency:   6 ms failures 0 # values: 5 7 6 6 5 6 7 6 6 6 6 6 6 6 6 5 6 6 6 7
-d_09: @00:04:09.435151  [00:04:09.435,150] <inf> mesh_nw_test: Dev 9 addr 0x000a avg latency:   0 ms failures 0 # values: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-d_09: @00:02:04.858796 INFO: test_node_tester PASSED
+d_09: @00:04:16.049439  [00:04:16.049,438] <inf> mesh_nw_test: Dev 0 addr 0x0001 avg latency: 159 ms failures 0 # values: 161 139 134 145 164 171 154 180 161 183 210 192 131 138 179 152 143 171 151 126
+d_09: @00:04:16.049439  [00:04:16.049,438] <inf> mesh_nw_test: Dev 1 addr 0x0002 avg latency: 142 ms failures 0 # values: 168 160 160 131 149 134 135 135 145 119 140 153 137 132 168 121 115 201 119 131
+d_09: @00:04:16.049439  [00:04:16.049,438] <inf> mesh_nw_test: Dev 2 addr 0x0003 avg latency: 123 ms failures 0 # values: 147 102 109 97 117 145 120 141 135 116 136 117 126 126 142 111 130 110 133 104
+d_09: @00:04:16.049439  [00:04:16.049,438] <inf> mesh_nw_test: Dev 3 addr 0x0004 avg latency: 100 ms failures 0 # values: 98 94 100 89 94 109 101 113 95 100 87 91 142 84 97 98 83 125 117 91
+d_09: @00:04:16.049439  [00:04:16.049,438] <inf> mesh_nw_test: Dev 4 addr 0x0005 avg latency:  88 ms failures 0 # values: 92 93 75 99 95 81 61 73 66 92 104 104 107 76 100 86 71 88 99 104
+d_09: @00:04:16.049439  [00:04:16.049,438] <inf> mesh_nw_test: Dev 5 addr 0x0006 avg latency:  75 ms failures 0 # values: 62 102 63 73 115 54 67 66 77 107 80 58 77 65 67 125 57 54 82 68
+d_09: @00:04:16.049439  [00:04:16.049,438] <inf> mesh_nw_test: Dev 6 addr 0x0007 avg latency:  55 ms failures 0 # values: 37 55 56 73 75 43 89 39 79 47 45 43 42 94 48 50 49 39 55 53
+d_09: @00:04:16.049439  [00:04:16.049,438] <inf> mesh_nw_test: Dev 7 addr 0x0008 avg latency:  38 ms failures 0 # values: 61 28 29 42 56 25 64 40 23 35 34 33 37 48 32 27 43 28 32 43
+d_09: @00:04:16.049439  [00:04:16.049,438] <inf> mesh_nw_test: Dev 8 addr 0x0009 avg latency:  15 ms failures 0 # values: 17 17 14 14 12 15 15 17 10 15 15 13 23 17 16 19 13 14 17 11
+d_09: @00:04:16.049439  [00:04:16.049,438] <inf> mesh_nw_test: Dev 9 addr 0x000a avg latency:   0 ms failures 0 # values: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 ```
 
 5. You can then visualize the test results by pasting the output in the helper script `helper_plot_results.py` and running it:
@@ -182,10 +181,6 @@ You can build your own testing scenarios for specific applications and specific 
 Refer to existing [Bluetooth Mesh Babblesim tests](https://github.com/zephyrproject-rtos/zephyr/tree/main/tests/bsim/bluetooth/mesh) for more inspiration. The existing tests are not
 based on network topology, and they assume all devices can communicate with all other devices.
 
-## Limitations
-
-This networking simulation demonstration uses Zephyr's link layer for simplicity. Currently, it is not possible to use SoftDevice controller for Babblesim simulation.
-However, as Bluetooth Mesh operates at higher protocol layer above the controller, such simulation can be a great tool to understand functioning of Bluetooth Mesh networking.
 
 ### Important Notes
 
